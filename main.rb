@@ -80,17 +80,7 @@ get '/calendar/events' do
   time_min = params['time_min'] ? DateTime.parse(params['time_min']) : DateTime.now.rfc3339
   events = calendar.list_events('primary', time_min: time_min, options: { authorization: user_credentials })
   events = events.items.select{|e| e.status == 'confirmed' }.map do |e|
-    {
-        id: e.id,
-        name: e.summary,
-        description: e.description,
-        starts_at: e.start.date_time ,
-        ends_at: e.end.date_time ,
-        location: e.location,
-        attendees: e.attendees,
-        reccurence: e.recurrence,
-        duration: e.end.date_time - e.start.date_time
-    }
+    format_event(e)
   end
   [200, {'Content-Type' => 'application/json'}, events.to_json]
 end
@@ -105,14 +95,31 @@ get '/calendar/events/:event_id' do |event_id|
 end
 
 post '/calendar/events/new' do
-  event = calendar.insert_event('primary', options: { authorization: user_credentials })
+  data = JSON.parse(request.body.read)
+  event = create_event_from_post_body(data)
+  event = calendar.insert_event('primary', event options: { authorization: user_credentials })
 end
 
 post '/calendar/events/:event_id' do |event_id|
-  event = calendar.get_event('primary', event_id, options: { authorization: user_credentials })
+  data = JSON.parse(request.body.read)
+  event = create_event_from_post_body(data)
+  event = calendar.update_event('primary', event_id, options: { authorization: user_credentials })
 end
 
-
+def format_event(e)
+  duration = e.end.date_time - e.start.date_time if !e.end.date_time.nil? && !e.start.date_time.nil?
+  {
+      id:           e.id,
+      name:         e.summary,
+      description:  e.description,
+      starts_at:    e.start.date_time,
+      ends_at:      e.end.date_time,
+      location:     e.location,
+      attendees:    e.attendees,
+      reccurence:   e.recurrence,
+      duration:     duration
+  }
+end
 
 
 get '/login' do
