@@ -1,4 +1,5 @@
 require 'google/apis/calendar_v3'
+require 'google/apis/oauth2_v2'
 require 'google/api_client/client_secrets'
 require 'json'
 require 'sinatra'
@@ -13,6 +14,8 @@ set :session_secret, ENV['SESSION_SECRET']
 def logger; settings.logger end
 
 def calendar; settings.calendar; end
+
+def oauth2; settings.oauth2; end
 
 def user_credentials
   # Build a per-request oauth credential based on token stored in session
@@ -33,15 +36,22 @@ configure do
 
   Google::Apis::ClientOptions.default.application_name = 'Ruby Calendar sample'
   Google::Apis::ClientOptions.default.application_version = '1.0.0'
-  calendar_api = Google::Apis::CalendarV3::CalendarService.new
+  calendar_api  = Google::Apis::CalendarV3::CalendarService.new
+  oauth2_api        = Google::Apis::Oauth2V2::Oauth2Service.new
+
 
   client_secrets = Google::APIClient::ClientSecrets.load
   authorization = client_secrets.to_authorization
-  authorization.scope = 'https://www.googleapis.com/auth/calendar'
+  authorization.scope = [
+      'https://www.googleapis.com/auth/calendar',
+      'https://www.googleapis.com/auth/plus.me',
+      'https://www.googleapis.com/auth/userinfo.profile'
+  ]
 
   set :authorization, authorization
   set :logger, logger
   set :calendar, calendar_api
+  set :oauth2, oauth2_api
 end
 
 
@@ -69,6 +79,8 @@ get '/oauth2callback' do
   # Exchange token
   user_credentials.code = params[:code] if params[:code]
   user_credentials.fetch_access_token!
+  binding.pry
+  userinfo = oauth2.get_userinfo(options: { authorization: user_credentials } )
   redirect to('/')
 end
 
@@ -96,6 +108,7 @@ end
 
 post '/calendar/events/new' do
   data = JSON.parse(request.body.read)
+  binding.pry
   event = create_event_from_post_body(data)
   event = calendar.insert_event('primary', event, options: { authorization: user_credentials })
   [200, {'Content-Type' => 'application/json'}, event.to_json]
@@ -103,6 +116,7 @@ end
 
 post '/calendar/events/:event_id' do |event_id|
   data = JSON.parse(request.body.read)
+  binding.pry
   event = create_event_from_post_body(data)
   event = calendar.update_event('primary', event, event_id, options: { authorization: user_credentials })
   [200, {'Content-Type' => 'application/json'}, event.to_json]
