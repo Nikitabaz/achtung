@@ -90,5 +90,5 @@ get '/index' do
 end
 
 get '/event' do
-  File.read(File.join('public', 'index.html'))
+  File.read(File.join('public', 'event.html'))
 end
