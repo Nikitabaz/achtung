@@ -1,0 +1,4 @@
+*.sqlite3
+*.lock
+client_secrets.json
+*.log
