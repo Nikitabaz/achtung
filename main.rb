@@ -108,6 +108,10 @@ post '/calendar/events/:event_id' do |event_id|
   [200, {'Content-Type' => 'application/json'}, event.to_json]
 end
 
+get '/profile' do
+  File.read(File.join('public', 'profile.html'))
+end
+
 def format_event(e)
   duration = e.end.date_time - e.start.date_time if !e.end.date_time.nil? && !e.start.date_time.nil?
   {
