@@ -204,11 +204,11 @@ get '/event' do
 end
 
 get '/profile' do
-  File.read(File.join('public', 'profile.html'))
+  erb :profile
 end
 
 get '/user' do
-  File.read(File.join('public', 'user.html'))
+  erb :user
 end
 
 get '/template' do
