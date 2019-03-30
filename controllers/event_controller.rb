@@ -4,8 +4,8 @@ require 'json'
 
 class EventListController < Sinatra::Base
   get "/event/list" do
-    events = Event.all.map { |event| event.to_hash }
-    return [200, events.to_json]
+    @events = Event.all.map { |event| event.to_hash }
+    erb :events
   end
 
   get "/event/:id" do |id|

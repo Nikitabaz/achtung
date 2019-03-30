@@ -17,8 +17,6 @@ set :bind, '0.0.0.0'
 
 set :root, File.dirname(__FILE__)
 
-
-
 def logger; settings.logger end
 
 def calendar; settings.calendar; end
@@ -62,6 +60,7 @@ configure do
   set :db, Sequel.connect("sqlite://db/development.sqlite3")
 
   set :app_name, 'Achtung!'
+  set :views, File.join(settings.root, 'views')
 end
 
 require_relative "controllers/event_controller.rb"
