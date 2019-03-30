@@ -97,13 +97,15 @@ end
 post '/calendar/events/new' do
   data = JSON.parse(request.body.read)
   event = create_event_from_post_body(data)
-  event = calendar.insert_event('primary', event options: { authorization: user_credentials })
+  event = calendar.insert_event('primary', event, options: { authorization: user_credentials })
+  [200, {'Content-Type' => 'application/json'}, event.to_json]
 end
 
 post '/calendar/events/:event_id' do |event_id|
   data = JSON.parse(request.body.read)
   event = create_event_from_post_body(data)
-  event = calendar.update_event('primary', event_id, options: { authorization: user_credentials })
+  event = calendar.update_event('primary', event, event_id, options: { authorization: user_credentials })
+  [200, {'Content-Type' => 'application/json'}, event.to_json]
 end
 
 def format_event(e)
@@ -115,12 +117,15 @@ def format_event(e)
       starts_at:    e.start.date_time,
       ends_at:      e.end.date_time,
       location:     e.location,
-      attendees:    e.attendees,
+      attendees:    e.attendees.select{ |a| !a.resource },
       reccurence:   e.recurrence,
       duration:     duration
   }
 end
 
+def create_event_from_post_body(d)
+  d
+end
 
 get '/login' do
   File.read(File.join('public', 'index_login.html'))
