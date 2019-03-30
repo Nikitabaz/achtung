@@ -156,3 +156,7 @@ end
 get '/event' do
   File.read(File.join('public', 'event.html'))
 end
+
+get '/user' do
+  File.read(File.join('public', 'user.html'))
+end
