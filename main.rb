@@ -10,6 +10,8 @@ require 'sqlite3'
 
 require 'colorize'
 
+require "erb"
+
 set :port, 8080
 set :bind, '0.0.0.0'
 
@@ -58,6 +60,8 @@ configure do
   set :oauth2, oauth2_api
 
   set :db, Sequel.connect("sqlite://db/development.sqlite3")
+
+  set :app_name, 'Achtung!'
 end
 
 require_relative "controllers/event_controller.rb"
@@ -192,12 +196,11 @@ get '/login' do
 end
 
 get '/index' do
-  # "TEST"
-  File.read(File.join('public', 'index.html'))
+  erb :index
 end
 
 get '/event' do
-  File.read(File.join('public', 'event.html'))
+  erb :event
 end
 
 get '/profile' do
@@ -208,3 +211,6 @@ get '/user' do
   File.read(File.join('public', 'user.html'))
 end
 
+get '/template' do
+  erb :index, layout: :layout
+end
