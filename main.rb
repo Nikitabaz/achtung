@@ -10,7 +10,10 @@ require 'sqlite3'
 
 require 'colorize'
 
-require "erb"
+require 'sinatra/base'
+require 'sinatra/assetpack'
+
+require 'erb'
 
 set :port, 8080
 set :bind, '0.0.0.0'
