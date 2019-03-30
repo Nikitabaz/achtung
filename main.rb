@@ -25,18 +25,6 @@ def oauth2; settings.oauth2; end
 
 def auth; settings.authorization; end
 
-# def user_credentials
-#   # Build a per-request oauth credential based on token stored in session
-#   # which allows us to use a shared API client.
-#   authorization = (
-#     auth = settings.authorization.dup
-#     auth.redirect_uri = to('/oauth2callback')
-#     auth.update_token!(session)
-#     auth
-#   )
-#   authorization
-# end
-
 configure do
   log_file = File.open('calendar.log', 'a+')
   log_file.sync = true
