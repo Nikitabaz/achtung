@@ -5,12 +5,16 @@ require 'json'
 require 'sinatra'
 require 'logger'
 require 'pry'
+require 'sequel'
+require 'sqlite3'
+
 require 'colorize'
 
 set :port, 8080
 set :bind, '0.0.0.0'
 
 set :root, File.dirname(__FILE__)
+
 
 
 def logger; settings.logger end
@@ -60,10 +64,17 @@ configure do
   ]
 
   set :authorization, authorization
-  set :logger,        logger
-  set :calendar,      calendar_api
-  set :oauth2,        oauth2_api
+
+  set :logger, logger
+  set :calendar, calendar_api
+  set :oauth2, oauth2_api
+
+  set :db, Sequel.connect("sqlite://db/development.sqlite3")
 end
+
+require_relative "controllers/event_controller.rb"
+use EventListController
+use CommentsController
 
 before do
   # Ensure user has authorized the app
@@ -208,3 +219,4 @@ end
 get '/user' do
   File.read(File.join('public', 'user.html'))
 end
+
