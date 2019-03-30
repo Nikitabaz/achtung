@@ -5,11 +5,13 @@ require 'json'
 require 'sinatra'
 require 'logger'
 require 'pry'
+require 'colorize'
 
 set :port, 8080
+set :bind, '0.0.0.0'
 
-enable :sessions
-set :session_secret, ENV['SESSION_SECRET']
+set :root, File.dirname(__FILE__)
+
 
 def logger; settings.logger end
 
@@ -17,22 +19,32 @@ def calendar; settings.calendar; end
 
 def oauth2; settings.oauth2; end
 
-def user_credentials
-  # Build a per-request oauth credential based on token stored in session
-  # which allows us to use a shared API client.
-  @authorization ||= (
-  auth = settings.authorization.dup
-  auth.redirect_uri = to('/oauth2callback')
-  auth.update_token!(session)
-  auth
-  )
-end
+def auth; settings.authorization; end
+
+# def user_credentials
+#   # Build a per-request oauth credential based on token stored in session
+#   # which allows us to use a shared API client.
+#   authorization = (
+#     auth = settings.authorization.dup
+#     auth.redirect_uri = to('/oauth2callback')
+#     auth.update_token!(session)
+#     auth
+#   )
+#   authorization
+# end
 
 configure do
   log_file = File.open('calendar.log', 'a+')
   log_file.sync = true
   logger = Logger.new(log_file)
   logger.level = Logger::DEBUG
+
+
+  use Rack::Session::Cookie, :key => 'rack.session',
+      :domain => 'localhost',
+      :path => '/',
+      :expire_after => 60*60*1, # In seconds
+      :secret => ENV['SESSION_SECRET']
 
   Google::Apis::ClientOptions.default.application_name = 'Ruby Calendar sample'
   Google::Apis::ClientOptions.default.application_version = '1.0.0'
@@ -53,14 +65,26 @@ configure do
   set :oauth2,        oauth2_api
 end
 
-
 before do
-  puts "BEFORE | #{request.url}"
   # Ensure user has authorized the app
 
-  return if request.path_info =~ /^\/oauth2/
+  puts "\n\nBEFORE | #{request.url.to_s.bold.yellow}"
+  puts "SESSION | #{session.pretty_inspect.to_s.green}"
 
-  unless authorized?
+  if request.path_info == '://localhost::0'
+    redirect to('/index')
+  end
+
+  pass if request.path_info =~ /^\/signout/
+  pass if request.path_info =~ /^\/oauth2/
+
+  # binding.pry if session[:access_token].nil?
+
+  puts "COOKIES: #{request.cookies}"
+
+  puts "MINE SESSION: #{session[:session_id].to_s.magenta.bold}"
+
+  if !authorized?
     session[:initial_url] = request.url
     authorize!
   else
@@ -69,39 +93,38 @@ before do
 end
 
 def authorize!
-  if user_credentials.access_token.nil?
-    puts "NO TOKEN!"
-    redirect to('/oauth2authorize')
-  elsif session[:user_info].nil?
-    puts "NO USER INFO"
-  else
-    return [404, 'Not Authorized']
-  end
+  redirect to('/oauth2authorize')
 end
 
 def authorized?
-  user_credentials.access_token
+  session[:access_token]
 end
 
 after do
-  puts "AFTER | #{request.url}"
+  puts "\n\nAFTER | #{request.url.to_s.bold.yellow}"
+  puts "SESSION | #{session.pretty_inspect.to_s.green}"
+
   # Serialize the access/refresh token to the session and credential store.
-  session[:access_token] = user_credentials.access_token
-  session[:refresh_token] = user_credentials.refresh_token
-  session[:expires_in] = user_credentials.expires_in
-  session[:issued_at] = user_credentials.issued_at
-  session[:user_info] = user_credentials.access_token ? oauth2.get_userinfo(options: { authorization: user_credentials } ).to_h : nil
 end
 
 get '/oauth2authorize' do
   # Request authorization
-  redirect user_credentials.authorization_uri.to_s, 303
+  auth.redirect_uri = to('/oauth2callback')
+  redirect auth.authorization_uri.to_s, 303
 end
 
 get '/oauth2callback' do
   # Exchange token
-  user_credentials.code = params[:code] if params[:code]
-  user_credentials.fetch_access_token!
+  current_auth      = auth.dup
+  current_auth.code = params[:code] if params[:code]
+  current_auth.fetch_access_token!
+
+  session[:access_token]  = current_auth.access_token
+  session[:refresh_token] = current_auth.refresh_token
+  session[:expires_in]    = current_auth.expires_in
+  session[:issued_at]     = current_auth.issued_at
+  session[:user_info]     = current_auth ? oauth2.get_userinfo(options: { authorization: current_auth } ).to_h : nil
+
   redirect to(session[:initial_url])
 end
 
@@ -110,9 +133,10 @@ get '/' do
 end
 
 get '/calendar/events' do
-  binding.pry
+  # binding.pry
   time_min = params['time_min'] ? DateTime.parse(params['time_min']) : DateTime.now.rfc3339
-  events = calendar.list_events('primary', time_min: time_min, options: { authorization: user_credentials })
+  binding.pry
+  events = calendar.list_events('primary', time_min: time_min, options: { authorization: auth.dup.update_token!(session) })
   events = events.items.select{|e| e.status == 'confirmed' }.map do |e|
     format_event(e)
   end
@@ -120,11 +144,11 @@ get '/calendar/events' do
 end
 
 delete '/calendar/events/:event_id' do |event_id|
-  calendar.delete_event('primary', event_id, options: { authorization: user_credentials })
+  calendar.delete_event('primary', event_id, options: { authorization: auth.dup.update_token!(session) })
 end
 
 get '/calendar/events/:event_id' do |event_id|
-  event = calendar.get_event('primary', event_id , options: { authorization: user_credentials })
+  event = calendar.get_event('primary', event_id , options: { authorization: auth.dup.update_token!(session) })
   [200, {'Content-Type' => 'application/json'}, event.to_h.to_json]
 end
 
@@ -132,7 +156,7 @@ post '/calendar/events/new' do
   data = JSON.parse(request.body.read)
   binding.pry
   event = create_event_from_post_body(data)
-  event = calendar.insert_event('primary', event, options: { authorization: user_credentials })
+  event = calendar.insert_event('primary', event, options: { authorization: auth.dup.update_token!(session) })
   [200, {'Content-Type' => 'application/json'}, event.to_json]
 end
 
@@ -140,7 +164,7 @@ post '/calendar/events/:event_id' do |event_id|
   data = JSON.parse(request.body.read)
   binding.pry
   event = create_event_from_post_body(data)
-  event = calendar.update_event('primary', event, event_id, options: { authorization: user_credentials })
+  event = calendar.update_event('primary', event, event_id, options: { authorization: auth.dup.update_token!(session) })
   [200, {'Content-Type' => 'application/json'}, event.to_json]
 end
 
@@ -169,6 +193,7 @@ get '/login' do
 end
 
 get '/index' do
+  # "TEST"
   File.read(File.join('public', 'index.html'))
 end
 
