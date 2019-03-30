@@ -204,3 +204,7 @@ end
 get '/profile' do
   File.read(File.join('public', 'profile.html'))
 end
+
+get '/user' do
+  File.read(File.join('public', 'user.html'))
+end
