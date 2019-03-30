@@ -10,6 +10,8 @@ get '/login' do
   File.read(File.join('public', 'index_login.html'))
 end
 
+
+
 get '/index' do
   File.read(File.join('public', 'index.html'))
 end
@@ -20,14 +22,12 @@ set :session_secret, ENV['SESSION_SECRET']
 get '/' do
   client_secrets = Google::APIClient::ClientSecrets.load
   unless session.has_key?(:credentials)
-    redirect to('/login')
+    # redirect to('/login')
     redirect to('/oauth2callback')
   end
   client_opts = JSON.parse(session[:credentials])
   auth_client = Signet::OAuth2::Client.new(client_opts)
   redirect to('/index')
-  # "WE MADE IT"
-  # "<pre>#{JSON.pretty_generate(files.to_h)}</pre>"
 end
 
 get '/oauth2callback' do
