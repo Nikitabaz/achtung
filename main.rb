@@ -1,4 +1,5 @@
 require 'google/apis/calendar_v3'
+require 'google/apis/oauth2_v2'
 require 'google/api_client/client_secrets'
 require 'json'
 require 'sinatra'
@@ -13,6 +14,8 @@ set :session_secret, ENV['SESSION_SECRET']
 def logger; settings.logger end
 
 def calendar; settings.calendar; end
+
+def oauth2; settings.oauth2; end
 
 def user_credentials
   # Build a per-request oauth credential based on token stored in session
@@ -33,15 +36,22 @@ configure do
 
   Google::Apis::ClientOptions.default.application_name = 'Ruby Calendar sample'
   Google::Apis::ClientOptions.default.application_version = '1.0.0'
-  calendar_api = Google::Apis::CalendarV3::CalendarService.new
+  calendar_api  = Google::Apis::CalendarV3::CalendarService.new
+  oauth2_api        = Google::Apis::Oauth2V2::Oauth2Service.new
+
 
   client_secrets = Google::APIClient::ClientSecrets.load
   authorization = client_secrets.to_authorization
-  authorization.scope = 'https://www.googleapis.com/auth/calendar'
+  authorization.scope = [
+      'https://www.googleapis.com/auth/calendar',
+      'https://www.googleapis.com/auth/plus.me',
+      'https://www.googleapis.com/auth/userinfo.profile'
+  ]
 
   set :authorization, authorization
   set :logger, logger
   set :calendar, calendar_api
+  set :oauth2, oauth2_api
 end
 
 
@@ -69,17 +79,71 @@ get '/oauth2callback' do
   # Exchange token
   user_credentials.code = params[:code] if params[:code]
   user_credentials.fetch_access_token!
+  binding.pry
+  userinfo = oauth2.get_userinfo(options: { authorization: user_credentials } )
   redirect to('/')
 end
 
 get '/' do
-  # Fetch list of events on the user's default calandar
-  events = calendar.list_events('primary', options: { authorization: user_credentials })
-  [200, {'Content-Type' => 'application/json'}, events.to_h.to_json]
+  redirect to('/index')
 end
 
+get '/calendar/events' do
+  time_min = params['time_min'] ? DateTime.parse(params['time_min']) : DateTime.now.rfc3339
+  events = calendar.list_events('primary', time_min: time_min, options: { authorization: user_credentials })
+  events = events.items.select{|e| e.status == 'confirmed' }.map do |e|
+    format_event(e)
+  end
+  [200, {'Content-Type' => 'application/json'}, events.to_json]
+end
 
+delete '/calendar/events/:event_id' do |event_id|
+  calendar.delete_event('primary', event_id, options: { authorization: user_credentials })
+end
 
+get '/calendar/events/:event_id' do |event_id|
+  event = calendar.get_event('primary', event_id , options: { authorization: user_credentials })
+  [200, {'Content-Type' => 'application/json'}, event.to_h.to_json]
+end
+
+post '/calendar/events/new' do
+  data = JSON.parse(request.body.read)
+  binding.pry
+  event = create_event_from_post_body(data)
+  event = calendar.insert_event('primary', event, options: { authorization: user_credentials })
+  [200, {'Content-Type' => 'application/json'}, event.to_json]
+end
+
+post '/calendar/events/:event_id' do |event_id|
+  data = JSON.parse(request.body.read)
+  binding.pry
+  event = create_event_from_post_body(data)
+  event = calendar.update_event('primary', event, event_id, options: { authorization: user_credentials })
+  [200, {'Content-Type' => 'application/json'}, event.to_json]
+end
+
+get '/profile' do
+  File.read(File.join('public', 'profile.html'))
+end
+
+def format_event(e)
+  duration = e.end.date_time - e.start.date_time if !e.end.date_time.nil? && !e.start.date_time.nil?
+  {
+      id:           e.id,
+      name:         e.summary,
+      description:  e.description,
+      starts_at:    e.start.date_time,
+      ends_at:      e.end.date_time,
+      location:     e.location,
+      attendees:    e.attendees.select{ |a| !a.resource },
+      reccurence:   e.recurrence,
+      duration:     duration
+  }
+end
+
+def create_event_from_post_body(d)
+  d
+end
 
 get '/login' do
   File.read(File.join('public', 'index_login.html'))

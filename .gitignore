@@ -1,2 +1,9 @@
+<<<<<<< HEAD
+*.sqlite3
+*.lock
 client_secrets.json
 *.log
+=======
+client_secrets.json
+*.log
+>>>>>>> 4380d489ad69768707d1400d3b8883104ff2e69c
