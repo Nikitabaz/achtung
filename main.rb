@@ -5,11 +5,15 @@ require 'json'
 require 'sinatra'
 require 'logger'
 require 'pry'
+require 'sequel'
+require 'sqlite3'
+
 
 set :port, 8080
 
 enable :sessions
 set :session_secret, ENV['SESSION_SECRET']
+
 
 def logger; settings.logger end
 
@@ -52,7 +56,13 @@ configure do
   set :logger, logger
   set :calendar, calendar_api
   set :oauth2, oauth2_api
+
+  set :db, Sequel.connect("sqlite://db/development.sqlite3")
 end
+
+require_relative "controllers/event_controller.rb"
+use EventListController
+use CommentsController
 
 
 before do
