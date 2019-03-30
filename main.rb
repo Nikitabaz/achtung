@@ -39,7 +39,6 @@ configure do
   calendar_api  = Google::Apis::CalendarV3::CalendarService.new
   oauth2_api        = Google::Apis::Oauth2V2::Oauth2Service.new
 
-
   client_secrets = Google::APIClient::ClientSecrets.load
   authorization = client_secrets.to_authorization
   authorization.scope = [
@@ -49,17 +48,34 @@ configure do
   ]
 
   set :authorization, authorization
-  set :logger, logger
-  set :calendar, calendar_api
-  set :oauth2, oauth2_api
+  set :logger,        logger
+  set :calendar,      calendar_api
+  set :oauth2,        oauth2_api
 end
 
 
 before do
   # Ensure user has authorized the app
-  unless user_credentials.access_token || request.path_info =~ /^\/oauth2/
-    redirect to('/oauth2authorize')
+  unless authorized? || request.path_info =~ /^\/oauth2/
+    session[:initial_url] = request.url
+    authorize!
   end
+end
+
+def authorize!
+  if user_credentials.access_token.nil?
+    puts "NO TOKEN!"
+    redirect to('/oauth2authorize')
+  elsif session[:user_info].nil?
+    puts "NO USER INFO"
+    session[:user_info] = oauth2.get_userinfo(options: { authorization: user_credentials } ).to_h if user_credentials
+  else
+    return [404, 'Not Authorized']
+  end
+end
+
+def authorized?
+  user_credentials.access_token && session[:user_info]
 end
 
 after do
@@ -79,8 +95,6 @@ get '/oauth2callback' do
   # Exchange token
   user_credentials.code = params[:code] if params[:code]
   user_credentials.fetch_access_token!
-  binding.pry
-  userinfo = oauth2.get_userinfo(options: { authorization: user_credentials } )
   redirect to('/')
 end
 
@@ -89,6 +103,7 @@ get '/' do
 end
 
 get '/calendar/events' do
+  binding.pry
   time_min = params['time_min'] ? DateTime.parse(params['time_min']) : DateTime.now.rfc3339
   events = calendar.list_events('primary', time_min: time_min, options: { authorization: user_credentials })
   events = events.items.select{|e| e.status == 'confirmed' }.map do |e|
@@ -122,9 +137,6 @@ post '/calendar/events/:event_id' do |event_id|
   [200, {'Content-Type' => 'application/json'}, event.to_json]
 end
 
-get '/profile' do
-  File.read(File.join('public', 'profile.html'))
-end
 
 def format_event(e)
   duration = e.end.date_time - e.start.date_time if !e.end.date_time.nil? && !e.start.date_time.nil?
@@ -155,4 +167,8 @@ end
 
 get '/event' do
   File.read(File.join('public', 'event.html'))
+end
+
+get '/profile' do
+  File.read(File.join('public', 'profile.html'))
 end
