@@ -55,10 +55,16 @@ end
 
 
 before do
+  puts "BEFORE | #{request.url}"
   # Ensure user has authorized the app
-  unless authorized? || request.path_info =~ /^\/oauth2/
+
+  return if request.path_info =~ /^\/oauth2/
+
+  unless authorized?
     session[:initial_url] = request.url
     authorize!
+  else
+    session[:initial_url] = nil
   end
 end
 
@@ -68,22 +74,23 @@ def authorize!
     redirect to('/oauth2authorize')
   elsif session[:user_info].nil?
     puts "NO USER INFO"
-    session[:user_info] = oauth2.get_userinfo(options: { authorization: user_credentials } ).to_h if user_credentials
   else
     return [404, 'Not Authorized']
   end
 end
 
 def authorized?
-  user_credentials.access_token && session[:user_info]
+  user_credentials.access_token
 end
 
 after do
+  puts "AFTER | #{request.url}"
   # Serialize the access/refresh token to the session and credential store.
   session[:access_token] = user_credentials.access_token
   session[:refresh_token] = user_credentials.refresh_token
   session[:expires_in] = user_credentials.expires_in
   session[:issued_at] = user_credentials.issued_at
+  session[:user_info] = user_credentials.access_token ? oauth2.get_userinfo(options: { authorization: user_credentials } ).to_h : nil
 end
 
 get '/oauth2authorize' do
@@ -95,7 +102,7 @@ get '/oauth2callback' do
   # Exchange token
   user_credentials.code = params[:code] if params[:code]
   user_credentials.fetch_access_token!
-  redirect to('/')
+  redirect to(session[:initial_url])
 end
 
 get '/' do
