@@ -7,5 +7,5 @@ get '/login' do
 end
 
 get '/index' do
-  "YO BIATCH!"
+  File.read(File.join('public', 'index.html'))
 end
