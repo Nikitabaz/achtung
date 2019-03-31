@@ -10,3 +10,7 @@ gem 'logger'
 gem 'colorize'
 gem 'sqlite3'
 gem 'sass'
+
+gem 'pry-byebug'
+
+gem 'activesupport'
