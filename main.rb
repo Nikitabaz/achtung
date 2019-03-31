@@ -369,7 +369,7 @@ class EventListController < ApplicationController
                                                                           })
                                                   }
                                               })
-      return [200, response.to_json]
+      erb :event
     else
       return [404]
     end
@@ -411,7 +411,9 @@ class EventListController < ApplicationController
                              google_id:   google_event.id
                          })
 
-    tags = JSON(params[:tags]) || {}
+    binding.pry
+
+    tags = JSON.parse(params[:tags] || '{}')
     tags.each do |tag_str|
       tag = Tag.where(:name => tag_str).all.first || Tag.create(:name => tag_str)
       event.add_tag tag
@@ -433,7 +435,7 @@ class EventListController < ApplicationController
       event.update(start_time: params[:start_time]) if params[:start_time]
       event.update(end_time: params[:end_time]) if params[:end_time]
       event.update(location: params[:location]) if params[:location]
-      tags = JSON(params[:tags]) || {}
+      tags = JSON.parse(params[:tags] || '{}')
       tags.each do |tag_str|
         tag = Tag.where(:name => tag_str).all.first || Tag.create(:name => tag_str)
         event.add_tag tag

@@ -5,6 +5,7 @@ $(document).ready(function(){
     $('#datetimepicker1').datetimepicker();
 
     $("#squarespaceModal button[data-action='save']").click( function(e) {
+        $("#squarespaceModal #eukalipt").serialize();
         debugger;
         // $.ajax({
         //         data: $("#squarespaceModal form").serialize(),
