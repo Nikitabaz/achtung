@@ -11,13 +11,6 @@ require 'sqlite3'
 
 require 'colorize'
 
-
-# require_relative "controllers/event_controller.rb"
-
-
-# Dir.glob('./controllers/*.rb').each { |file| require file }
-
-
 class ApplicationController < Sinatra::Base
 
   set :port, 8080
@@ -277,9 +270,4 @@ class CommentsController < ApplicationController
     comment.creator = get_user
     redirect "/event/#{params[:event_id]}"
   end
-end
-
-
-get '/template' do
-  erb :index, layout: :layout
 end
