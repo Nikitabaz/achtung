@@ -4,7 +4,15 @@ $(document).ready(function(){
 
     $('#datetimepicker1').datetimepicker();
 
-	var window_width 	 = $(window).width(),
+    $("#squarespaceModal button[data-action='save']").click( function(e) {
+        debugger;
+        // $.ajax({
+        //         data: $("#squarespaceModal form").serialize(),
+        //     })
+    });
+
+
+    var window_width 	 = $(window).width(),
 	window_height 		 = window.innerHeight,
 	header_height 		 = $(".default-header").height(),
 	header_height_static = $(".site-header.static").outerHeight(),
@@ -83,9 +91,5 @@ var unavailableDates = [
 
 $('#calendar').availabilityCalendar(unavailableDates);
 
-
-debugger;
-
-$("#squarespaceModal")
 
  });
