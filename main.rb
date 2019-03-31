@@ -155,7 +155,7 @@ class ApplicationController < Sinatra::Base
 
   get '/index' do
     # "TEST"
-    erb :index
+    erb :index, :locals => {'meeting_rooms' => EventListController::MEETING_ROOMS}
   end
 
   def get_user
@@ -376,6 +376,8 @@ class EventListController < ApplicationController
   end
 
   post "/create" do
+
+    binding.pry
 
     name        = params[:name]
     location    = params[:location]

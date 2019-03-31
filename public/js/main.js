@@ -2,10 +2,11 @@
 $(document).ready(function(){
 	"use strict";
 
-    $('#datetimepicker1').datetimepicker();
+    $('#datetimepicker1').datetimepicker({format: 'DD-MM-YYYY HH:mm'});
+    $('#datetimepicker2').datetimepicker({format: 'DD-MM-YYYY HH:mm'});
 
     $("#squarespaceModal button[data-action='save']").click( function(e) {
-        debugger;
+
         // $.ajax({
         //         data: $("#squarespaceModal form").serialize(),
         //     })
