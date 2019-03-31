@@ -173,7 +173,8 @@ class CalendarController < ApplicationController
     time_min = params['time_min'] ? DateTime.parse(params['time_min']) : DateTime.now.rfc3339
     events = calendar.list_events('primary', time_min: time_min, options: {authorization: auth.dup.update_token!(session)})
     events = events.items.select {|e| e.status == 'confirmed'}.map do |e|
-      format_event(e)
+      # format_event(e)
+      e.to_h
     end
     [200, {'Content-Type' => 'application/json'}, events.to_json]
   end
@@ -221,20 +222,97 @@ class CalendarController < ApplicationController
 end
 
 class EventListController < ApplicationController
-  def create_event_from_post_body(data)
-    Google::Apis::CalendarV3::Event.new( summary: data[:name],
-                                         location: data[:location],
-                                         description: data[:description],
+
+  MEETING_ROOMS = {
+      'Minsk-8-Ireland-Dublin (12)' =>  {
+          calendar_id: 'profitero.com_3835373939303534393136@resource.calendar.google.com',
+          capacity: 12
+      },
+      'Minsk-8-UK-London (6)' =>  {
+          calendar_id: 'profitero.com_3336373732393733313333@resource.calendar.google.com',
+          capacity: 6
+      },
+      'Minsk-9-Aquarium (7)' =>  {
+          calendar_id: 'profitero.com_37363937353439373536@resource.calendar.google.com',
+          capacity: 7
+      },
+      'Minsk-9-Canteen (9)' =>  {
+          calendar_id: 'profitero.com_3737313636363735323131@resource.calendar.google.com',
+          capacity: 9
+      },
+      'Minsk-9-Terrarium (Little) (7)' =>  {
+          calendar_id: 'profitero.com_3439323930333835373331@resource.calendar.google.com',
+          capacity: 7
+      },
+      'Minsk-20-Crystal (4)' =>  {
+          calendar_id: 'profitero.com_3732393236333536353235@resource.calendar.google.com',
+          capacity: 4
+      },
+      'Minsk-20-Gems (4)' =>  {
+          calendar_id: 'profitero.com_3635383335353139313231@resource.calendar.google.com',
+          capacity: 4
+      },
+      'Minsk-20-Marble (12)' =>  {
+          calendar_id: 'profitero.com_353839323130363934@resource.calendar.google.com',
+          capacity: 12
+      },
+      'Minsk-20-Wood (4)' =>  {
+          calendar_id: 'profitero.com_3639383539333932343034@resource.calendar.google.com',
+          capacity: 4
+      },
+      'Minsk-8-Ireland-Cork (2)' =>  {
+          calendar_id: 'profitero.com_3733303638393130393934@resource.calendar.google.com',
+          capacity: 2
+      },
+      'Minsk-8-Ireland-Irish Kitchen (4)' =>  {
+          calendar_id: 'profitero.com_3638363531303332353436@resource.calendar.google.com',
+          capacity: 4
+      },
+      'Minsk-8-UK-British Kitchen (8)' =>  {
+          calendar_id: 'profitero.com_3630303336393735353139@resource.calendar.google.com',
+          capacity: 8
+      },
+      'Minsk-8-USA-Aliaska (2)' =>  {
+          calendar_id: 'profitero.com_3735313932393532393834@resource.calendar.google.com',
+          capacity: 2
+      },
+      'Minsk-8-USA-Amerikan Kitchen (10)' =>  {
+          calendar_id: 'profitero.com_3134373438323331313237@resource.calendar.google.com',
+          capacity: 10
+      },
+      'Minsk-8-USA-Boston (50)' =>  {
+          calendar_id: 'profitero.com_35363534323539313233@resource.calendar.google.com',
+          capacity: 59
+      }
+  }
+
+  def create_event_from_post_body(name: name,
+                                  location: location,
+                                  description: description,
+                                  start_time: start_time,
+                                  end_time: end_time,
+                                  location_email: location_email)
+    Google::Apis::CalendarV3::Event.new( summary: name,
+                                         location: location,
+                                         description: description,
                                          start: {
-                                             date_time: DateTime.parse(params[:start_time]).rfc3339,
+                                             date_time: start_time,
                                              time_zone: settings.time_zone
                                          },
                                          end: {
-                                             date_time: DateTime.parse(params[:end_time]).rfc3339,
+                                             date_time: end_time,
                                              time_zone: settings.time_zone
                                          },
                                          attendees: [
-                                             {email: get_user.email}
+                                             {
+                                                 email: get_user.email,
+                                                 responseStatus: 'accepted'
+                                             },
+                                             {
+                                                 email: location_email,
+                                                 responseStatus: 'needsAction',
+                                                 resource: true
+                                             }
                                          ],
                                          reminders: {
                                              use_default: false,
@@ -243,7 +321,19 @@ class EventListController < ApplicationController
     )
   end
 
+  def is_location_free?(location, start_time, end_time)
+    time_min = nil
+    time_max = nil
+    time_min = start_time if start_time
+    time_max = end_time if end_time
+
+    events = calendar.list_events(location[:calendar_id], time_min: time_min, time_max: time_max, options: {authorization: auth.dup.update_token!(session)})
+    events.items.empty?
+  end
+
   get "/list" do
+    @error_message = session.delete(:flash_error)
+
     events = Event.where(:deleted => false)
     query = Event.where(:deleted => false)
     if tags = params['tags']
@@ -285,6 +375,56 @@ class EventListController < ApplicationController
     end
   end
 
+  post "/create" do
+
+    name        = params[:name]
+    location    = params[:location]
+    description = params[:description]
+    start_time  = DateTime.parse(params[:start_time])
+    end_time    = DateTime.parse(params[:end_time])
+
+    location_object = MEETING_ROOMS[location]
+
+    unless location_object && is_location_free?(location_object, start_time.rfc3339, end_time.rfc3339)
+      session[:flash_error] = "Location #{location} is busy at selected time window: #{start_time.strftime("%F %T")} - #{end_time.strftime("%F %T")}"
+      redirect to("/list")
+    end
+
+    google_event = create_event_from_post_body(
+        name:           name,
+        location:       location,
+        description:    description,
+        start_time:     start_time.rfc3339,
+        end_time:       end_time.rfc3339,
+        location_email: location_object[:calendar_id]
+    )
+
+    google_event = calendar.insert_event('primary', google_event, options: {authorization: auth.dup.update_token!(session)})
+
+    event = Event.create({
+                             name:        params[:name],
+                             description: params[:description],
+                             start_time:  start_time,
+                             end_time:    end_time,
+                             location:    params[:location],
+                             picture_url: params[:picture_url],
+                             google_id:   google_event.id
+                         })
+
+    tags = JSON(params[:tags]) || {}
+    tags.each do |tag_str|
+      tag = Tag.where(:name => tag_str).all.first || Tag.create(:name => tag_str)
+      event.add_tag tag
+    end
+
+    event.update(:creator => get_user)
+    event.add_user get_user
+
+    event.save
+
+    redirect "/event/#{event[:id]}"
+  end
+
   post "/:id" do |id|
     event = Event.where(:id => id).all.first
     if get_user.id == event.creator.id
@@ -293,7 +433,7 @@ class EventListController < ApplicationController
       event.update(start_time: params[:start_time]) if params[:start_time]
       event.update(end_time: params[:end_time]) if params[:end_time]
       event.update(location: params[:location]) if params[:location]
-      tags = JSON(params[:tags])
+      tags = JSON(params[:tags]) || {}
       tags.each do |tag_str|
         tag = Tag.where(:name => tag_str).all.first || Tag.create(:name => tag_str)
         event.add_tag tag
@@ -317,30 +457,6 @@ class EventListController < ApplicationController
     else
       return [200, {success: false}.to_json]
     end
-  end
-
-  post "/create" do
-    google_event = create_event_from_post_body(params)
-    google_event = calendar.insert_event('primary', google_event, options: {authorization: auth.dup.update_token!(session)})
-
-    event = Event.create({
-                             name:        params[:name],
-                             description: params[:description],
-                             start_time:  params[:start_time],
-                             end_time:    params[:end_time],
-                             location:    params[:location],
-                             picture_url: params[:picture_url],
-                             google_id:   google_event.id
-                         })
-    tags = JSON(params[:tags])
-    tags.each do |tag_str|
-      tag = Tag.where(:name => tag_str).all.first || Tag.create(:name => tag_str)
-      event.add_tag tag
-    end
-    event.update(:creator => get_user)
-    event.add_user get_user
-    event.save
-    redirect "/event/#{event[:id]}"
   end
 
   delete "/:id" do |id|

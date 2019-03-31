@@ -1,3 +1,15 @@
+<% if @error_message %>
+
+  <section class="events-area section-gap" id="upcoming">
+    <div class="container">
+      <div class="alert">
+        <%= @error_message %>
+      </div>
+    </div>
+  </section>
+
+<% end %>
+
 <% if @events.any?  %>
 
   <% @events.each do |event| %>
