@@ -2,13 +2,14 @@ require_relative "../models/models"
 require 'pry'
 require 'json'
 
-class EventListController < Sinatra::Base
-  get "/event/list" do
-    @events = Event.all.map { |event| event.to_hash }
-    erb :events
+
+class EventListController < ApplicationController
+  get "/list" do
+    events = Event.all.map { |event| event.to_hash }
+    return [200, events.to_json]
   end
 
-  get "/event/:id" do |id|
+  get "/:id" do |id|
     event = Event.where(:id => id).all.first
     if event
       tags = event.tags.map { |tag| tag.to_hash }
@@ -27,7 +28,7 @@ class EventListController < Sinatra::Base
     end
   end
 
-  post "/event/create" do
+  post "/create" do
     binding.pry
     event = Event.create({
       name: params[:name],
@@ -45,8 +46,8 @@ class EventListController < Sinatra::Base
   end
 end
 
-class CommentsController < Sinatra::Base
-  post "/comment/create" do
+class CommentsController < ApplicationController
+  post "/create" do
     binding.pry
     event = Event.where(:id => params[:event_id]).all.first
     comment = Comment.create({
