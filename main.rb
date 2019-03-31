@@ -66,6 +66,8 @@ class ApplicationController < Sinatra::Base
     set :calendar, calendar_api
     set :oauth2, oauth2_api
 
+    set :app_name, 'Achtung!'
+
 
     set :db, Sequel.connect("sqlite://db/development.sqlite3")
     require_relative "./models/models"
@@ -148,7 +150,7 @@ class ApplicationController < Sinatra::Base
 
   get '/index' do
     # "TEST"
-    File.read(File.join('public', 'index.html'))
+    erb :index
   end
 
   def get_user
@@ -275,6 +277,8 @@ class CommentsController < ApplicationController
     comment.creator = get_user
     redirect "/event/#{params[:event_id]}"
   end
+end
+
 
 get '/template' do
   erb :index, layout: :layout
