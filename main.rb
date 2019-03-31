@@ -306,7 +306,6 @@ class EventListController < ApplicationController
   get "/:id" do |id|
     event = Event.where(:id => id).all.first
     if event
-      binding.pry
       @event = event
       erb :event
     else
@@ -316,13 +315,36 @@ class EventListController < ApplicationController
 
   post "/create" do
 
-    binding.pry
-
     name        = params[:name]
     location    = params[:location]
     description = params[:description]
-    start_time  = DateTime.parse(params[:start_time])
-    end_time    = DateTime.parse(params[:end_time])
+    start_time  = DateTime.parse(params[:start_time]) rescue nil
+    end_time    = DateTime.parse(params[:end_time]) rescue nil
+
+    unless !name.empty?
+      session[:flash_error] = "No name was given when creating event"
+      redirect to("/list")
+    end
+
+    unless !location.empty?
+      session[:flash_error] = "No location was given when creating event"
+      redirect to("/list")
+    end
+
+    unless start_time
+      session[:flash_error] = "No start time was given when creating event"
+      redirect to("/list")
+    end
+
+    unless end_time
+      session[:flash_error] = "No end time was given when creating event"
+      redirect to("/list")
+    end
+
+    unless start_time < end_time
+      session[:flash_error] = "End time is before start time"
+      redirect to("/list")
+    end
 
     location_object = MEETING_ROOMS[location]
 
@@ -352,9 +374,7 @@ class EventListController < ApplicationController
                              google_id:   google_event.id,
                              deleted:     false
                          })
-
-    binding.pry
-
+    
     tags = params[:tags].empty? ? [] : params[:tags].split(',').map{|s| s.strip}
     tags.each do |tag_str|
       tag = Tag.where(:name => tag_str).all.first || Tag.create(:name => tag_str)
