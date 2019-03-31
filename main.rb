@@ -244,8 +244,8 @@ class EventListController < ApplicationController
   end
 
   get "/list" do
-    events = Event.all.map {|event| event.to_hash}
-    return [200, events.to_json]
+    @events = Event.all
+    erb :events
   end
 
   get "/:id" do |id|
