@@ -281,7 +281,7 @@ class EventListController < ApplicationController
   get "/list" do
     @error_message = session.delete(:flash_error)
 
-    events = Event.where(:deleted => false)\
+    events = Event.where(:deleted => false)
     query = Event.where(:deleted => false)
     if tags = (params['tags'] && JSON(params['tags']))
       query = query.join(:event_tag, event_id: :id).where(:tag_id => tags)

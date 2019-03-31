@@ -95,62 +95,21 @@
                 Location
                 <%= event.location %>
               </p>
-              <p>
-                Users here: <a href="/user">123123</a>, <a href="/user">sadad</a>, <a href="/user">qweqwwe qqwe</a>
-              </p>
               <p class="meta">
                 <span class="lnr lnr-heart"></span>
                 <span class="likes">05 likes</span>
                 <span class="lnr lnr-bubble"></span>
                 <span class="likes">06 comments</span>
               </p>
-              <% if @events.first.creator != get_user  %>
+              <% if event.creator != get_user  %>
                 <button class="btn btn-info">Subscribe</button>
               <% end %>
-              <% if @events.first.creator == get_user %>
+              <% if event.creator == get_user %>
                 <button class="btn btn-info">Delete</button>
               <% end %>
 
             </div>
           </div>
-
-          <div class="col-sm-8 details">
-            <h3><a href="<%= to("/#{event.id}") %>"><%= event.name %></a></h3>
-            <p>
-              <%= event.description %>
-            </p>
-            <p>
-              Created by user with id:
-              <%= event.creator.name %>
-            </p>
-            <p>
-              Starts at
-              <%= event.start_time.strftime("%F %T") %>
-            </p>
-            <p>
-              End time
-              <%= event.end_time.strftime("%F %T") %>
-            </p>
-            <p>
-              Location
-              <%= event.location %>
-            </p>
-            <p>
-              Users here: <a href="/user">123123</a>, <a href="/user">sadad</a>, <a href="/user">qweqwwe qqwe</a>
-            </p>
-            <p class="meta">
-              <span class="lnr lnr-heart"></span>
-              <span class="likes">05 likes</span>
-              <span class="lnr lnr-bubble"></span>
-              <span class="likes">06 comments</span>
-            </p>
-            <% if event.creator != get_user  %>
-              <button class="btn btn-info">Subscribe</button>
-            <% end %>
-            <% if event.creator == get_user %>
-              <button class="btn btn-info">Delete</button>
-            <% end %>
-
 
         </div>
       </section>
@@ -160,6 +119,4 @@
   </div>
 </div>
 </div>
-
-
-
+<% end %>
