@@ -168,59 +168,6 @@ class ApplicationController < Sinatra::Base
   end
 end
 
-# class CalendarController < ApplicationController
-#   get '/events' do
-#     time_min = params['time_min'] ? DateTime.parse(params['time_min']) : DateTime.now.rfc3339
-#     events = calendar.list_events('primary', time_min: time_min, options: {authorization: auth.dup.update_token!(session)})
-#     events = events.items.select {|e| e.status == 'confirmed'}.map do |e|
-#       # format_event(e)
-#       e.to_h
-#     end
-#     [200, {'Content-Type' => 'application/json'}, events.to_json]
-#   end
-#
-#   delete '/events/:event_id' do |event_id|
-#     calendar.delete_event('primary', event_id, options: {authorization: auth.dup.update_token!(session)})
-#   end
-#
-#   get '/events/:event_id' do |event_id|
-#     event = calendar.get_event('primary', event_id, options: {authorization: auth.dup.update_token!(session)})
-#     [200, {'Content-Type' => 'application/json'}, event.to_h.to_json]
-#   end
-#
-#   post '/events/new' do
-#     data = JSON.parse(request.body.read)
-#     event = create_event_from_post_body(data)
-#     event = calendar.insert_event('primary', event, options: {authorization: auth.dup.update_token!(session)})
-#     [200, {'Content-Type' => 'application/json'}, event.to_json]
-#   end
-#
-#   post '/events/:event_id' do |event_id|
-#     data = JSON.parse(request.body.read)
-#     event = create_event_from_post_body(data)
-#     event = calendar.update_event('primary', event, event_id, options: {authorization: auth.dup.update_token!(session)})
-#     [200, {'Content-Type' => 'application/json'}, event.to_json]
-#   end
-#
-#
-#   def format_event(e)
-#     duration = e.end.date_time - e.start.date_time if !e.end.date_time.nil? && !e.start.date_time.nil?
-#     {
-#         id: e.id,
-#         name: e.summary,
-#         description: e.description,
-#         starts_at: e.start.date_time,
-#         ends_at: e.end.date_time,
-#         location: e.location,
-#         attendees: e.attendees.select {|a| !a.resource},
-#         reccurence: e.recurrence,
-#         duration: duration
-#     }
-#   end
-#
-#
-# end
-
 class EventListController < ApplicationController
 
   MEETING_ROOMS = {
@@ -359,7 +306,6 @@ class EventListController < ApplicationController
   get "/:id" do |id|
     event = Event.where(:id => id).all.first
     if event
-      binding.pry
       @event = event
       erb :event
     else
@@ -369,13 +315,36 @@ class EventListController < ApplicationController
 
   post "/create" do
 
-    binding.pry
-
     name        = params[:name]
     location    = params[:location]
     description = params[:description]
-    start_time  = DateTime.parse(params[:start_time])
-    end_time    = DateTime.parse(params[:end_time])
+    start_time  = DateTime.parse(params[:start_time]) rescue nil
+    end_time    = DateTime.parse(params[:end_time]) rescue nil
+
+    unless !name.empty?
+      session[:flash_error] = "No name was given when creating event"
+      redirect to("/list")
+    end
+
+    unless !location.empty?
+      session[:flash_error] = "No location was given when creating event"
+      redirect to("/list")
+    end
+
+    unless start_time
+      session[:flash_error] = "No start time was given when creating event"
+      redirect to("/list")
+    end
+
+    unless end_time
+      session[:flash_error] = "No end time was given when creating event"
+      redirect to("/list")
+    end
+
+    unless start_time < end_time
+      session[:flash_error] = "End time is before start time"
+      redirect to("/list")
+    end
 
     location_object = MEETING_ROOMS[location]
 
@@ -405,10 +374,8 @@ class EventListController < ApplicationController
                              google_id:   google_event.id,
                              deleted:     false
                          })
-
-    binding.pry
-
-    tags = JSON.parse(params[:tags] || '{}')
+    
+    tags = params[:tags].empty? ? [] : params[:tags].split(',').map{|s| s.strip}
     tags.each do |tag_str|
       tag = Tag.where(:name => tag_str).all.first || Tag.create(:name => tag_str)
       event.add_tag tag
@@ -430,7 +397,7 @@ class EventListController < ApplicationController
       event.update(start_time: params[:start_time]) if params[:start_time]
       event.update(end_time: params[:end_time]) if params[:end_time]
       event.update(location: params[:location]) if params[:location]
-      tags = JSON.parse(params[:tags] || '{}')
+      tags = params[:tags].empty? ? [] : params[:tags].split(',').map{|s| s.strip}
       tags.each do |tag_str|
         tag = Tag.where(:name => tag_str).all.first || Tag.create(:name => tag_str)
         event.add_tag tag

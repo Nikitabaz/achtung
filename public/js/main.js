@@ -2,8 +2,8 @@
 $(document).ready(function(){
 	"use strict";
 
-    $('#datetimepicker1').datetimepicker({format: 'DD-MM-YYYY HH:mm'});
-    $('#datetimepicker2').datetimepicker({format: 'DD-MM-YYYY HH:mm'});
+    $('#datetimepicker1').datetimepicker({format: 'DD-MM-YYYY HH:mm Z'});
+    $('#datetimepicker2').datetimepicker({format: 'DD-MM-YYYY HH:mm Z'});
 
     $("#squarespaceModal button[data-action='save']").click( function(e) {
 
