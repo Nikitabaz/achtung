@@ -329,6 +329,7 @@ class EventListController < ApplicationController
                              start_time:  params[:start_time],
                              end_time:    params[:end_time],
                              location:    params[:location],
+                             picture_url: params[:picture_url],
                              google_id:   google_event.id
                          })
     tags = JSON(params[:tags])
