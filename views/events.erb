@@ -14,15 +14,15 @@
           </p>
           <p>
             Created by user with id:
-            <%= event.creator_id %>
+            <%= event.creator.name %>
           </p>
           <p>
             Starts at
-            <%= event.start_time %>
+            <%= event.start_time.strftime("%F %T") %>
           </p>
           <p>
             End time
-            <%= event.end_time %>
+            <%= event.end_time.strftime("%F %T") %>
           </p>
           <p>
             Location
@@ -37,7 +37,13 @@
             <span class="lnr lnr-bubble"></span>
             <span class="likes">06 comments</span>
           </p>
-          <button class="btn btn-info">Subscribe</button>
+          <% if @events.first.creator != get_user  %>
+            <button class="btn btn-info">Subscribe</button>
+          <% end %>
+          <% if @events.first.creator == get_user %>
+            <button class="btn btn-info">Delete</button>
+          <% end %>
+
         </div>
       </div>
 

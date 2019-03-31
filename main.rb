@@ -70,7 +70,7 @@ class ApplicationController < Sinatra::Base
     set :calendar, calendar_api
     set :oauth2, oauth2_api
 
-    set :app_name, 'Achtung!'
+    set :app_name, 'Nicht Arbeiten'
 
     set :time_zone, ActiveSupport::TimeZone::MAPPING['Minsk']
 
