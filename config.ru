@@ -5,4 +5,4 @@ require File.expand_path('main', File.dirname(__FILE__))
 map('/') { run ApplicationController }
 map('/event/') { run EventListController }
 map('/comment/') { run CommentsController }
-map('/calendar/') { run CalendarController }
+# map('/calendar/') { run CalendarController }
