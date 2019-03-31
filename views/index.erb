@@ -234,6 +234,30 @@
               <input type="email" class="form-control" id="event_name" placeholder="Picture URL">
             </div>
 
+            <div class="form-group">
+              <label for="exampleInputDate">Date</label>
+
+              <div class="input-group date" id="datetimepicker1" data-target-input="nearest">
+                <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1"/>
+                <div class="input-group-append input-group-addon" data-target="#datetimepicker1" data-toggle="datetimepicker">
+                  <div class="input-group-text">
+                    <i class="fa fa-calendar"></i>
+                  </div>
+                </div>
+              </div>
+              <script type="text/javascript">
+                  $(function () {
+                      $('#datetimepicker1').datetimepicker();
+                  });
+              </script>
+
+            </div>
+
+            <div class="form-group">
+              <label for="exampleInputFile">Place</label>
+              <input type="email" class="form-control" id="event_name" placeholder="Place">
+            </div>
+
           </form>
 
         </div>
