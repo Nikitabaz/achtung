@@ -244,7 +244,6 @@ class EventListController < ApplicationController
   end
 
   get "/list" do
-    binding.pry
     events = Event.where(:deleted => false)
     query = Event.where(:deleted => false)
     if tags = params['tags']
