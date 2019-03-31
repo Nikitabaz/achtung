@@ -2,6 +2,8 @@
 $(document).ready(function(){
 	"use strict";
 
+    $('#datetimepicker1').datetimepicker();
+
 	var window_width 	 = $(window).width(),
 	window_height 		 = window.innerHeight,
 	header_height 		 = $(".default-header").height(),
@@ -13,7 +15,7 @@ $(document).ready(function(){
 	$(".fitscreen").css("height", fitscreen);
 
   //-------- Active Sticky Js ----------//
-     $(".default-header").sticky({topSpacing:0});
+  //    $(".default-header").sticky({topSpacing:0});
   
 
      
@@ -27,8 +29,7 @@ $(document).ready(function(){
   });
 
 
-  $('.nav-item a:first').tab('show');
-
+  // $('.nav-item a:first').tab('show');
 
 
   // Select all links with hashes
@@ -83,5 +84,8 @@ var unavailableDates = [
 $('#calendar').availabilityCalendar(unavailableDates);
 
 
+debugger;
+
+$("#squarespaceModal")
 
  });
