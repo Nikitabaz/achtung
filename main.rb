@@ -168,58 +168,58 @@ class ApplicationController < Sinatra::Base
   end
 end
 
-class CalendarController < ApplicationController
-  get '/events' do
-    time_min = params['time_min'] ? DateTime.parse(params['time_min']) : DateTime.now.rfc3339
-    events = calendar.list_events('primary', time_min: time_min, options: {authorization: auth.dup.update_token!(session)})
-    events = events.items.select {|e| e.status == 'confirmed'}.map do |e|
-      # format_event(e)
-      e.to_h
-    end
-    [200, {'Content-Type' => 'application/json'}, events.to_json]
-  end
-
-  delete '/events/:event_id' do |event_id|
-    calendar.delete_event('primary', event_id, options: {authorization: auth.dup.update_token!(session)})
-  end
-
-  get '/events/:event_id' do |event_id|
-    event = calendar.get_event('primary', event_id, options: {authorization: auth.dup.update_token!(session)})
-    [200, {'Content-Type' => 'application/json'}, event.to_h.to_json]
-  end
-
-  post '/events/new' do
-    data = JSON.parse(request.body.read)
-    event = create_event_from_post_body(data)
-    event = calendar.insert_event('primary', event, options: {authorization: auth.dup.update_token!(session)})
-    [200, {'Content-Type' => 'application/json'}, event.to_json]
-  end
-
-  post '/events/:event_id' do |event_id|
-    data = JSON.parse(request.body.read)
-    event = create_event_from_post_body(data)
-    event = calendar.update_event('primary', event, event_id, options: {authorization: auth.dup.update_token!(session)})
-    [200, {'Content-Type' => 'application/json'}, event.to_json]
-  end
-
-
-  def format_event(e)
-    duration = e.end.date_time - e.start.date_time if !e.end.date_time.nil? && !e.start.date_time.nil?
-    {
-        id: e.id,
-        name: e.summary,
-        description: e.description,
-        starts_at: e.start.date_time,
-        ends_at: e.end.date_time,
-        location: e.location,
-        attendees: e.attendees.select {|a| !a.resource},
-        reccurence: e.recurrence,
-        duration: duration
-    }
-  end
-
-
-end
+# class CalendarController < ApplicationController
+#   get '/events' do
+#     time_min = params['time_min'] ? DateTime.parse(params['time_min']) : DateTime.now.rfc3339
+#     events = calendar.list_events('primary', time_min: time_min, options: {authorization: auth.dup.update_token!(session)})
+#     events = events.items.select {|e| e.status == 'confirmed'}.map do |e|
+#       # format_event(e)
+#       e.to_h
+#     end
+#     [200, {'Content-Type' => 'application/json'}, events.to_json]
+#   end
+#
+#   delete '/events/:event_id' do |event_id|
+#     calendar.delete_event('primary', event_id, options: {authorization: auth.dup.update_token!(session)})
+#   end
+#
+#   get '/events/:event_id' do |event_id|
+#     event = calendar.get_event('primary', event_id, options: {authorization: auth.dup.update_token!(session)})
+#     [200, {'Content-Type' => 'application/json'}, event.to_h.to_json]
+#   end
+#
+#   post '/events/new' do
+#     data = JSON.parse(request.body.read)
+#     event = create_event_from_post_body(data)
+#     event = calendar.insert_event('primary', event, options: {authorization: auth.dup.update_token!(session)})
+#     [200, {'Content-Type' => 'application/json'}, event.to_json]
+#   end
+#
+#   post '/events/:event_id' do |event_id|
+#     data = JSON.parse(request.body.read)
+#     event = create_event_from_post_body(data)
+#     event = calendar.update_event('primary', event, event_id, options: {authorization: auth.dup.update_token!(session)})
+#     [200, {'Content-Type' => 'application/json'}, event.to_json]
+#   end
+#
+#
+#   def format_event(e)
+#     duration = e.end.date_time - e.start.date_time if !e.end.date_time.nil? && !e.start.date_time.nil?
+#     {
+#         id: e.id,
+#         name: e.summary,
+#         description: e.description,
+#         starts_at: e.start.date_time,
+#         ends_at: e.end.date_time,
+#         location: e.location,
+#         attendees: e.attendees.select {|a| !a.resource},
+#         reccurence: e.recurrence,
+#         duration: duration
+#     }
+#   end
+#
+#
+# end
 
 class EventListController < ApplicationController
 
@@ -358,17 +358,8 @@ class EventListController < ApplicationController
   get "/:id" do |id|
     event = Event.where(:id => id).all.first
     if event
-      tags = event.tags.map {|tag| tag.to_hash}
-      response = event.to_hash.merge({
-                                         :tags => tags
-                                     }).merge({
-                                                  :comments => event.comments.map {|comment|
-                                                    comment.to_hash.merge({
-                                                                              :children => comment.children.map {|child| child.to_hash},
-                                                                              :creator => comment.creator.to_hash
-                                                                          })
-                                                  }
-                                              })
+      binding.pry
+      @event = event
       erb :event
     else
       return [404]
@@ -408,7 +399,8 @@ class EventListController < ApplicationController
                              end_time:    end_time,
                              location:    params[:location],
                              picture_url: params[:picture_url],
-                             google_id:   google_event.id
+                             google_id:   google_event.id,
+                             deleted:     false
                          })
 
     binding.pry
