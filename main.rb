@@ -6,6 +6,7 @@ require 'sinatra'
 require 'sinatra/base'
 require 'logger'
 require 'pry'
+require 'pry-byebug'
 require 'sequel'
 require 'sqlite3'
 
@@ -220,8 +221,25 @@ end
 
 class EventListController < ApplicationController
   get "/list" do
-    events = Event.all.map { |event| event.to_hash }
-    return [200, events.to_json]
+    binding.pry
+    events = Event.where(:deleted => false)
+    query = Event.where(:deleted => false)
+    if tags = params['tags']
+      query = query.join(:tag_event, event_id: :id).where(:tag_id => tags)
+    elsif start_time = params[:start_time]
+      query = query.where(:start_time > start_time)
+    elsif end_time = params[:end_time]
+      query = query.where(:end_time < end_time)
+    end
+    events = query.all
+    if params[:recommend]
+      user_tag_ids = get_user.tags.map { |tag| tag.id }
+      events = events.all.select do |event|
+        event_tag_ids = event.tags.map { |tag| tag.id }
+        (user_tag_ids | event_tag_ids).size != (event_tag_ids.size + user_tag_ids.size)
+      end
+    end
+    return [200, events.map { |event| event.to_hash }.to_json]
   end
 
   get "/:id" do |id|
@@ -241,6 +259,40 @@ class EventListController < ApplicationController
       return [200, response.to_json]
     else
       return [404]
+    end
+  end
+
+  post "/:id" do |id|
+    event = Event.where(:id => id).all.first
+    if get_user.id == event.creator.id
+      event.update(name: params[:name]) if params[:name]
+      event.update(description: params[:description]) if params[:description]
+      event.update(start_time: params[:start_time]) if params[:start_time]
+      event.update(end_time: params[:end_time]) if params[:end_time]
+      event.update(location: params[:location]) if params[:location]
+      tags = JSON(params[:tags])
+      tags.each do |tag_str|
+        tag = Tag.where(:name => tag_str).all.first || Tag.create(:name => tag_str)
+        event.add_tag tag
+      end
+    end
+    redirect "/event/#{event[:id]}"
+  end
+
+  delete "/:id" do |id|
+    event = Event.where(:id => id).all.first
+    if get_user.id == event.creator.id
+      event.update(:deleted => true)
+    end
+  end
+
+  get "/subscribe/:id" do |id|
+    event = Event.where(:id => id).all.first
+    unless event.users.find { |sub| sub.id == get_user.id }
+      event.add_user(get_user)
+      return [200, {success: true}.to_json]
+    else
+      return [200, {success: false}.to_json]
     end
   end
 
