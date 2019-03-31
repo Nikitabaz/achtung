@@ -244,10 +244,9 @@ class EventListController < ApplicationController
   end
 
   get "/list" do
-    events = Event.where(:deleted => false)
     query = Event.where(:deleted => false)
-    if tags = params['tags']
-      query = query.join(:tag_event, event_id: :id).where(:tag_id => tags)
+    if tags = (params['tags'] && JSON(params['tags']))
+      query = query.join(:event_tag, event_id: :id).where(:tag_id => tags)
     elsif start_time = params[:start_time]
       query = query.where(:start_time > start_time)
     elsif end_time = params[:end_time]
@@ -262,6 +261,7 @@ class EventListController < ApplicationController
       end
     end
     @events = events
+    @tags = Tag.all
     erb :events
   end
 
