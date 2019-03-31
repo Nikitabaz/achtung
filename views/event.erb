@@ -6,10 +6,25 @@
         <img src="img/e1.jpg" alt="">
       </div>
       <div class="col-sm-8 details">
-        <h3>Addiction When Gambling Becomes Gambling </h3>
+        <h3><a href="<%= to("/#{@event.id}") %>"><%= @event.name %></a></h3>
         <p>
-          Inappropriate behavior Lorem ipsum dolor sit amet, consectetur. Inappropriate behavior Lorem ipsum
-          dolor sit amet, consectetur. Inappropriate behavior Lorem ipsum dolor sit amet, consectetur.
+          <%= @event.description %>
+        </p>
+        <p>
+          Created by user with id:
+          <%= @event.creator.name %>
+        </p>
+        <p>
+          Starts at
+          <%= @event.start_time.strftime("%F %T") %>
+        </p>
+        <p>
+          End time
+          <%= @event.end_time.strftime("%F %T") %>
+        </p>
+        <p>
+          Location
+          <%= @event.location %>
         </p>
         <p>
           Users here: <a href="/user">123123</a>, <a href="/user">sadad</a>, <a href="/user">qweqwwe qqwe</a>
@@ -20,7 +35,12 @@
           <span class="lnr lnr-bubble"></span>
           <span class="likes">06 comments</span>
         </p>
-        <button class="btn btn-info">Subscribe</button>
+        <% if @event.creator != get_user  %>
+          <button class="btn btn-info">Subscribe</button>
+        <% end %>
+        <% if @event.creator == get_user %>
+          <button class="btn btn-info">Delete</button>
+        <% end %>
       </div>
     </div>
 
@@ -32,48 +52,18 @@
         <div class="chatbody">
 
           <table class="table">
-            <tr>
-              <td><img src="http://via.placeholder.com/50x50?text=A"/></td>
-              <td><strong>Author:</strong> sdk fnsdkjnsadjnlk anflkjasdnflk kjasndlkfjnsdfs adfjksd ofh
-                saddf lsdnflksnadl fjnasdfl
-                ajsndflkja nlnfsdjlnf aslnfd as
-              </td>
-              <td>15:20</td>
-            </tr>
 
-            <tr>
-              <td><img src="http://via.placeholder.com/50x50?text=B"/></td>
-              <td><strong>Author:</strong> sdk fnsdkjnsadjnlk adfjksd ofh saddf lsdnflksnadl fjnasdfl
-                ajsndflkja nlnfsdjlnf aslnfd
-                as
-              </td>
-              <td>15:20</td>
-            </tr>
+            <% @event.comments.each do |comment| %>
 
-            <tr>
-              <td><img src="http://via.placeholder.com/50x50?text=A"/></td>
-              <td><strong>Author:</strong> sdk fnsdkjnsadjnlk anflkjasdnflk kjasndl sdflksnfl
-                jsdkfjsafkjsnd fnsalddf
-                sdjdknkfjnsdfs adfjksd ofh saddf lsdnflksnadl fjnasdfl ajsndflkja nlnfsdjlnf aslnfd as
-              </td>
-              <td>15:20</td>
-            </tr>
+              <tr>
+                <td><img src="<%= comment.creator.picture %>"/></td>
+                <td><strong>Author: <%= comment.creator %></strong>
+                  <%= comment.text %>
+                </td>
+              </tr>
 
-            <tr>
-              <td><img src="http://via.placeholder.com/50x50?text=B"/></td>
-              <td><strong>Author:</strong> sdk sf s aslnfd as</td>
-              <td>15:20</td>
-            </tr>
+            <% end %>
 
-            <tr>
-              <td><img src="http://via.placeholder.com/50x50?text=A"/></td>
-              <td><strong>Author:</strong> sdk fnsdkjnsadjnlk anflkjasdnflk c vlsndl v slkdknf
-                sdkmnfkfsndf kasndfllk asnddlflkn
-                sadfn sadn sandf sadf sajdf sdf sdflksnfl jsdkfjsafkjsnd fnsalddf sdjdknkfjnsdfs adfjksd
-                ofh saddf lsdnflksnadl fjnasdfl ajsndflkja nlnfsdjlnf aslnfd as
-              </td>
-              <td>15:20</td>
-            </tr>
           </table>
 
         </div>

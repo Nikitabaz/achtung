@@ -555,3 +555,14 @@ i.fa {
 i.glyphicon {
   color: #ffffff;
 }
+
+nav a {
+
+  color: #000;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  margin: 0 25px;
+  display: inline-block;
+
+}

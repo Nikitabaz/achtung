@@ -220,60 +220,79 @@
         <div class="modal-body">
 
           <!-- content goes here -->
-          <form>
+          <form method="post" action="/event/create">
             <div class="form-group">
               <label for="exampleInputEmail1">Name</label>
-              <input type="email" class="form-control" id="event_name" placeholder="Enter name">
+              <input type="text" class="form-control" name="name" placeholder="Enter name">
             </div>
             <div class="form-group">
               <label for="exampleInputPassword1">Description</label>
-              <textarea class="form-control" rows="10"  id="event_description" placeholder="Description (max 200 words)"></textarea>
+              <textarea class="form-control" rows="10"  name="description" placeholder="Description (max 200 words)"></textarea>
             </div>
             <div class="form-group">
               <label for="exampleInputFile">Picture input</label>
-              <input type="email" class="form-control" id="event_name" placeholder="Picture URL">
+              <input type="text" class="form-control" name="picture" placeholder="Picture URL">
             </div>
 
             <div class="form-group">
-              <label for="exampleInputDate">Date</label>
-
+              <label for="exampleInputDate">Start Date</label>
               <div class="input-group date" id="datetimepicker1" data-target-input="nearest">
-                <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1"/>
+                <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker1" name="start_time"/>
                 <div class="input-group-append input-group-addon" data-target="#datetimepicker1" data-toggle="datetimepicker">
                   <div class="input-group-text">
                     <i class="fa fa-calendar"></i>
                   </div>
                 </div>
               </div>
-              <script type="text/javascript">
-                  $(function () {
-                      $('#datetimepicker1').datetimepicker();
-                  });
-              </script>
+            </div>
 
+            <div class="form-group">
+              <label for="exampleInputDate">End Date</label>
+              <div class="input-group date" id="datetimepicker2" data-target-input="nearest">
+                <input type="text" class="form-control datetimepicker-input" data-target="#datetimepicker2" name="end_time"/>
+                <div class="input-group-append input-group-addon" data-target="#datetimepicker2" data-toggle="datetimepicker">
+                  <div class="input-group-text">
+                    <i class="fa fa-calendar"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="exampleInputFile">Tags</label>
+              <input type="text" class="form-control" name="tags" placeholder="Tags">
             </div>
 
             <div class="form-group">
               <label for="exampleInputFile">Place</label>
-              <input type="email" class="form-control" id="event_name" placeholder="Place">
+              <div class="btn-group">
+                <select id="company" class="form-control" name="location">
+                  <option>Without place</option>
+                  <% meeting_rooms.keys.each do |room| %>
+                    <option><%= room %></option>
+                  <% end %>
+                </select>
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <div class="btn-group btn-group-justified" role="group" aria-label="group button">
+                <div class="btn-group" role="group">
+                  <button type="button" class="btn btn-default" data-dismiss="modal"  role="button">Close</button>
+                </div>
+                <!--            <div class="btn-group btn-delete hidden" role="group">-->
+                <!--              <button type="button" id="delImage" class="btn btn-default btn-hover-red" data-dismiss="modal"  role="button">Delete</button>-->
+                <!--            </div>-->
+                <div class="btn-group" role="group">
+                  <button type="submit" id="saveImage" class="btn btn-default btn-hover-green" data-action="save" role="button">Save</button>
+                </div>
+              </div>
             </div>
 
           </form>
 
         </div>
-        <div class="modal-footer">
-          <div class="btn-group btn-group-justified" role="group" aria-label="group button">
-            <div class="btn-group" role="group">
-              <button type="button" class="btn btn-default" data-dismiss="modal"  role="button">Close</button>
-            </div>
-<!--            <div class="btn-group btn-delete hidden" role="group">-->
-<!--              <button type="button" id="delImage" class="btn btn-default btn-hover-red" data-dismiss="modal"  role="button">Delete</button>-->
-<!--            </div>-->
-            <div class="btn-group" role="group">
-              <button type="button" id="saveImage" class="btn btn-default btn-hover-green" data-action="save" role="button">Save</button>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   </div>

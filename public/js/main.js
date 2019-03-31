@@ -2,7 +2,18 @@
 $(document).ready(function(){
 	"use strict";
 
-	var window_width 	 = $(window).width(),
+    $('#datetimepicker1').datetimepicker({format: 'DD-MM-YYYY HH:mm'});
+    $('#datetimepicker2').datetimepicker({format: 'DD-MM-YYYY HH:mm'});
+
+    $("#squarespaceModal button[data-action='save']").click( function(e) {
+
+        // $.ajax({
+        //         data: $("#squarespaceModal form").serialize(),
+        //     })
+    });
+
+
+    var window_width 	 = $(window).width(),
 	window_height 		 = window.innerHeight,
 	header_height 		 = $(".default-header").height(),
 	header_height_static = $(".site-header.static").outerHeight(),
@@ -13,7 +24,7 @@ $(document).ready(function(){
 	$(".fitscreen").css("height", fitscreen);
 
   //-------- Active Sticky Js ----------//
-     $(".default-header").sticky({topSpacing:0});
+  //    $(".default-header").sticky({topSpacing:0});
   
 
      
@@ -27,8 +38,7 @@ $(document).ready(function(){
   });
 
 
-  $('.nav-item a:first').tab('show');
-
+  // $('.nav-item a:first').tab('show');
 
 
   // Select all links with hashes
@@ -81,7 +91,6 @@ var unavailableDates = [
 ];
 
 $('#calendar').availabilityCalendar(unavailableDates);
-
 
 
  });
