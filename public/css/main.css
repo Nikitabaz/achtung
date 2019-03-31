@@ -548,5 +548,10 @@ iframe {
   }
 }
 
+i.fa {
+  color: #000000;
+}
 
-
+i.glyphicon {
+  color: #ffffff;
+}

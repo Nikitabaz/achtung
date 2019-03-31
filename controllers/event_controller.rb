@@ -2,6 +2,7 @@ require_relative "../models/models"
 require 'pry'
 require 'json'
 
+
 class EventListController < ApplicationController
   get "/list" do
     events = Event.all.map { |event| event.to_hash }

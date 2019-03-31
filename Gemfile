@@ -9,3 +9,6 @@ gem 'pry'
 gem 'logger'
 gem 'colorize'
 gem 'sqlite3'
+gem 'sass'
+
+gem 'sinatra-assetpack', :require => 'sinatra/assetpack'
