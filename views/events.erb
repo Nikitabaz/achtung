@@ -1,3 +1,4 @@
+
 <% if @error_message %>
 
   <section class="events-area section-gap" id="upcoming">
@@ -12,15 +13,107 @@
 
 <% if @events.any?  %>
 
-  <% @events.each do |event| %>
+<script>
+  tags = {}
+  function addTag(node) {
+    id = node.id;
+    tags[id] = !tags[id]
+    for( k in tags) {
+      if(tags[k]) {
+        $("#"+k)[0].style.backgroundColor = "#007bff"
+        $("#"+k)[0].style.color = "#fff"
+        _tags = []
+        for( k in tags ) {
+          if(tags[k]) {
+            _tags.push(k)
+          }
+        }
+        $("#tags")[0].value = "[" + _tags.toString() + "]"
+      } else {
+        $("#"+k)[0].style.backgroundColor = "#fff"
+        $("#"+k)[0].style.color = "#000"
+      }
+    }
+  }
+</script>
+<div>
+  <div class="row">
+  <div class="col-2">
+    <div class="tagcloud03">
+        <ul id="tag_list">
+            <% @tags.each do |tag| %>
+              <li>
+                <a href="#" onclick="addTag(this)" id="<%= tag.id %>" >
+                  <%= tag.name %>
+                  <span>
+                    <%= tag.users.count + tag.events.count %>
+                  </span>
+                </a>
+              </li>
+            <% end %>
+        </ul>
+    </div>
+    <form action="/event/list" method="get" id="form1">
+      <input type="hidden" name="a" value="asdf">
+      <input id="tags" type="hidden" name="tags" value="asdf">
+    </form>
+    <button type="submit" form="form1" value="Filter" class="btn btn-block btn-primary">Filter</button>
+  </div>
+  <div class="col-6">
+    <% @events.each do |event| %>
 
-    <!-- Start events Area -->
-    <section class="events-area section-gap" id="upcoming">
-      <div class="container">
-        <div class="single-events row col-padding">
-          <div class="col-sm-2 image">
-            <img src="img/e1.jpg" alt="">
+
+      <!-- Start events Area -->
+      <section class="events-area" id="upcoming">
+        <div class="container">
+          <div class="single-events row col-padding">
+            <div class="col-sm-4 image">
+              <img src="img/e1.jpg" alt="">
+            </div>
+            <div class="col-sm-6 details">
+              <h3>
+                <a href="/event/<%= event.id %>">
+                  <%= event.name %>
+                </a>
+              </h3>
+              <p>
+                <%= event.description %>
+              </p>
+              <p>
+                Created by user with id:
+                <%= event.creator.name %>
+              </p>
+              <p>
+                Starts at
+                <%= event.start_time.strftime("%F %T") %>
+              </p>
+              <p>
+                End time
+                <%= event.end_time.strftime("%F %T") %>
+              </p>
+              <p>
+                Location
+                <%= event.location %>
+              </p>
+              <p>
+                Users here: <a href="/user">123123</a>, <a href="/user">sadad</a>, <a href="/user">qweqwwe qqwe</a>
+              </p>
+              <p class="meta">
+                <span class="lnr lnr-heart"></span>
+                <span class="likes">05 likes</span>
+                <span class="lnr lnr-bubble"></span>
+                <span class="likes">06 comments</span>
+              </p>
+              <% if @events.first.creator != get_user  %>
+                <button class="btn btn-info">Subscribe</button>
+              <% end %>
+              <% if @events.first.creator == get_user %>
+                <button class="btn btn-info">Delete</button>
+              <% end %>
+
+            </div>
           </div>
+
           <div class="col-sm-8 details">
             <h3><a href="<%= to("/#{event.id}") %>"><%= event.name %></a></h3>
             <p>
@@ -58,24 +151,15 @@
               <button class="btn btn-info">Delete</button>
             <% end %>
 
-          </div>
+
         </div>
+      </section>
+      <!-- End events Area -->
 
-      </div>
-    </section>
-    <!-- End events Area -->
-
-  <% end %>
-
-<% else %>
-
-  <section class="events-area section-gap" id="upcoming">
-    <div class="container">
-      No Events were ever created.
-    </div>
-  </section>
-
-<% end %>
+    <% end %>
+  </div>
+</div>
+</div>
 
 
 
