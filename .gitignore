@@ -2,3 +2,4 @@
 *.lock
 client_secrets.json
 *.log
+.idea/*
